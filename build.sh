@@ -8,7 +8,14 @@ mkdir -m 0700 -p /var/roothome
 ln -sf /run /var/run
 
 dnf config-manager --set-enabled crb
+
 dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
+dnf -y install centos-release-hyperscale centos-release-hyperscale-experimental
+
+for pkg in kernel kernel-core kernel-modules kernel-modules-core kernel-modules-extra ; do rpm --erase $pkg --nodeps ; done
+dnf -y install kernel kernel-core kernel-modules{,-core,-extra}
+
+dnf -y --allowerasing upgrade 
 
 dnf -y install @multimedia gstreamer1-plugins-{bad-free,bad-free-libs,good,base} lame{,-libs} libjxl
 
