@@ -14,7 +14,6 @@ dnf -y install @multimedia gstreamer1-plugins-{bad-free,bad-free-libs,good,base}
 
 # `dnf group info Workstation` without GNOME
 dnf group install -y --nobest \
-  -x console-login-helper-messages \
   -x rsyslog* \
   -x cockpit \
   -x PackageKit \
@@ -61,6 +60,9 @@ dnf -y install \
    "xdg-desktop-portal-gnome" \
    "xdg-user-dirs-gtk" \
    "yelp-tools"
+
+# This adds "[systemd] Failed Units: *" to the bashrc startup
+dnf -y remove console-login-helper-messages
 
 # This seems weirdly like a Schrödinger's issue. Removing the kernel here fails some builds and not removing it actually-
 # breaks some stuff? I dont know exactly what to do here.
