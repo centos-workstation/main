@@ -14,6 +14,8 @@ dnf -y install @multimedia gstreamer1-plugins-{bad-free,bad-free-libs,good,base}
 
 dnf group install -y --nobest Workstation 
 
+dnf -y remove console-login-helper-messages cockpit-packagekit rsyslog
+
 dnf upgrade -y
 # This seems weirdly like a Schrödinger's issue. Removing the kernel here fails some builds and not removing it actually-
 # breaks some stuff? I dont know exactly what to do here.
