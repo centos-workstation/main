@@ -7,7 +7,7 @@ export default_tag := env("DEFAULT_TAG", "latest")
 # should converge back on upstream (quay.io/centos-bootc/bootc-image-builder:latest)
 # asap
 
-export bib_image := env("BIB_IMAGE", "ghcr.io/centos-workstation/bootc-image-builder:latest")
+export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
 
 alias build-vm := build-qcow2
 alias rebuild-vm := rebuild-qcow2
@@ -113,7 +113,7 @@ _rootful_load_image $target_image=image_name $tag=default_tag:
     fi
 
     set +e
-    resolved_tag=$(podman inspect -t image "${target_image}:${tag}" | jq -r '.[].RepoTags.[0]')
+    resolved_tag=$(sudo podman inspect -t image "${target_image}:${tag}" | jq -r '.[].RepoTags.[0]')
     return_code=$?
     set -e
 
@@ -222,9 +222,8 @@ _run-vm $target_image $tag $type $config:
     run_args+=(--device=/dev/kvm)
     run_args+=(--volume "${PWD}/${image_file}":"/boot.${type}")
     run_args+=(docker.io/qemux/qemu-docker)
-    podman run "${run_args[@]}" &
+    sudo podman run "${run_args[@]}" &
     xdg-open http://localhost:${port}
-    fg "%podman"
 
 [group('Run Virtal Machine')]
 run-vm-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_run-vm target_image tag "qcow2" "image-builder.config.toml")
