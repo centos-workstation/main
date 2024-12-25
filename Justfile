@@ -3,7 +3,7 @@ export image_name := env("IMAGE_NAME", "main")
 export centos_version := env("CENTOS_VERSION", "stream10")
 export default_tag := env("DEFAULT_TAG", "latest")
 
-export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
+export bib_image := env("BIB_IMAGE", "localhost/bootc-image-builder:latest")
 
 alias build-vm := build-qcow2
 alias rebuild-vm := rebuild-qcow2
@@ -154,12 +154,13 @@ _build-bib $target_image $tag $type $config: (_rootful_load_image target_image t
       -it \
       --privileged \
       --pull=newer \
+      --net=host \
       --security-opt label=type:unconfined_t \
       -v $(pwd)/${config}:/config.toml:ro \
       -v $(pwd)/output:/output \
       -v /var/lib/containers/storage:/var/lib/containers/storage \
       "${bib_image}" \
-      ${args} \
+      ${args} --rootfs ext4 \
       "${target_image}"
 
     sudo chown -R $USER:$USER output
