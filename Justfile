@@ -3,10 +3,6 @@ export image_name := env("IMAGE_NAME", "main")
 export centos_version := env("CENTOS_VERSION", "stream10")
 export default_tag := env("DEFAULT_TAG", "latest")
 
-# work around issue with upstream image builder,
-# should converge back on upstream (quay.io/centos-bootc/bootc-image-builder:latest)
-# asap
-
 export bib_image := env("BIB_IMAGE", "quay.io/centos-bootc/bootc-image-builder:latest")
 
 alias build-vm := build-qcow2
