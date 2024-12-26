@@ -10,6 +10,10 @@ ln -sf /run /var/run
 dnf config-manager --set-enabled crb
 dnf -y install https://dl.fedoraproject.org/pub/epel/epel-release-latest-10.noarch.rpm
 
+dnf -y install centos-release-hyperscale centos-release-hyperscale-experimental
+dnf -y upgrade systemd
+dnf -y --allowerasing upgrade 
+
 dnf -y install @multimedia gstreamer1-plugins-{bad-free,bad-free-libs,good,base} lame{,-libs} libjxl plymouth plymouth-system-theme
 
 # `dnf group info Workstation` without GNOME
