@@ -55,47 +55,27 @@ jobs:
         with:
           remove-codeql: true
 
-      - name: Generate tags
-        id: generate-tags
-        shell: bash
-        run: |
-          # Generate a timestamp for creating an image version history
-          TIMESTAMP="$(date +%Y%m%d)"
-          COMMIT_TAGS=()
-          BUILD_TAGS=()
-
-          # Have tags for tracking builds during pull request
-          SHA_SHORT="${GITHUB_SHA::7}"
-          COMMIT_TAGS+=("pr-${{ github.event.number }}")
-          COMMIT_TAGS+=("${SHA_SHORT}")
-
-          # Append matching timestamp tags to keep a version history
-          for TAG in "${BUILD_TAGS[@]}"; do
-              BUILD_TAGS+=("${TAG}-${TIMESTAMP}")
-          done
-
-          BUILD_TAGS+=("${TIMESTAMP}")
-          BUILD_TAGS+=("${DEFAULT_TAG}")
-          BUILD_TAGS+=("${CENTOS_VERSION}")
-          BUILD_TAGS+=("${CENTOS_VERSION}.${TIMESTAMP}")
-
-          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
-              echo "Generated the following commit tags: "
-              for TAG in "${COMMIT_TAGS[@]}"; do
-                  echo "${TAG}"
-              done
-
-              alias_tags=("${COMMIT_TAGS[@]}")
-          else
-              alias_tags=("${BUILD_TAGS[@]}")
-          fi
-
-          echo "Generated the following build tags: "
-          for TAG in "${BUILD_TAGS[@]}"; do
-              echo "${TAG}"
-          done
-
-          echo "alias_tags=${alias_tags[*]}" >> $GITHUB_OUTPUT
+      - name: Image Metadata
+        uses: docker/metadata-action@v5
+        id: metadata
+        with:
+          images: |
+            ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=raw,value={{date 'YYYYMMDD'}},enable={{is_default_branch}}
+            type=raw,value=${{ env.CENTOS_VERSION }},enable={{is_default_branch}}
+            type=raw,value=${{ env.CENTOS_VERSION }}.{{date 'YYYYMMDD'}},enable={{is_default_branch}}
+            type=sha,enable=${{ github.event_name == 'pull_request' }}
+            type=ref,event=pr
+          labels: |
+            org.opencontainers.image.description=${{ env.IMAGE_DESC }}
+            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
+            io.artifacthub.package.readme-url=${{ env.README_URL }}
+            io.artifacthub.package.logo-url=${{ env.LOGO_URL }}
+          sep-tags: " "
+          sep-labels: " "
+          sep-annotation: " "
 
       - name: Build Image
         id: build-image
@@ -114,18 +94,14 @@ jobs:
           prev-ref: "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
           skip_compression: true
           version: ${{ env.CENTOS_VERSION }}
-          labels: |
-            org.opencontainers.image.title=${{ env.IMAGE_NAME }}
-            org.opencontainers.image.description=${{ env.IMAGE_DESC }}
-            io.artifacthub.package.readme-url=${{ env.README_URL }}
-            io.artifacthub.package.logo-url=${{ env.LOGO_URL }}
 
       - name: Load in podman and tag
         run: |
+          set -x
           IMAGE=$(podman pull ${{ steps.rechunk.outputs.ref }})
-          sudo rm -rf ${{ steps.rechunk.outputs.output }}
-          for tag in ${{ steps.generate-tags.outputs.alias_tags }}; do
-            podman tag $IMAGE ${{ env.IMAGE_NAME }}:$tag
+          sudo rm -rf ${{ steps.rechunk.outputs.output }} || echo "Somehow failed this"
+          for tag in ${{ steps.metadata.outputs.tags }}; do
+            podman tag $IMAGE $tag
           done
 
       # Workaround bug where capital letters in your GitHub username make it impossible to push to GHCR.
@@ -151,9 +127,7 @@ jobs:
         with:
           registry: ${{ steps.registry_case.outputs.lowercase }}
           image: ${{ env.IMAGE_NAME }}
-          tags: ${{ steps.generate-tags.outputs.alias_tags }}
-          extra-args: |
-            --disable-content-trust
+          tags: ${{ steps.metadata.outputs.tags }}
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
@@ -163,7 +137,9 @@ jobs:
         if: github.event_name != 'pull_request'
         run: |
           IMAGE_FULL="${{ steps.registry_case.outputs.lowercase }}/${IMAGE_NAME}"
-          cosign sign -y --key env://COSIGN_PRIVATE_KEY ${IMAGE_FULL}@${TAGS}
+          for tag in ${{ steps.metadata.outputs.tags }}; do
+            cosign sign -y --key env://COSIGN_PRIVATE_KEY ${tag}
+          done
         env:
           TAGS: ${{ steps.push.outputs.digest }}
           COSIGN_EXPERIMENTAL: false
