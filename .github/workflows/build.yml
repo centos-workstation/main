@@ -47,6 +47,9 @@ jobs:
     name: Build and push image
     runs-on: ubuntu-24.04
     needs: generate_matrix
+    # container:
+    #   image: registry.redhat.io/ubi9/ubi:latest
+    #   options: --privileged
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.generate_matrix.outputs.matrix)}}
@@ -91,6 +94,7 @@ jobs:
           version: ${{ env.CENTOS_VERSION }}
 
       - name: Load in podman
+        id: load
         run: |
           IMAGE=$(podman pull ${{ steps.rechunk.outputs.ref }})
           sudo rm -rf ${{ steps.rechunk.outputs.location }}
@@ -114,7 +118,7 @@ jobs:
         # if: github.event_name != 'pull_request'
         id: push
         env:
-          IMAGE_REGISTRY: ${{ steps.registry_case.outputs.lowercase }}
+          IMAGE_REGISTRY: ${{ env.IMAGE_REGISTRY }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           IMAGE_DIGEST: ${{ steps.load.outputs.digest }}
         run: |
