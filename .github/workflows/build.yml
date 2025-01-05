@@ -4,14 +4,11 @@ on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - "**.md"
   schedule:
     - cron: "05 10 * * *" # 10:05am UTC everyday
   merge_group:
-  push:
-    branches:
-      - main
-    paths-ignore:
-      - "**/README.md"
   workflow_dispatch:
 
 env:
@@ -20,7 +17,8 @@ env:
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   DEFAULT_TAG: "latest"
   CENTOS_VERSION: "stream10"
-  PLATFORMS: "amd64 arm64"
+  # PRs should only build for amd64.  The rest are pushed, so we should build for all platforms
+  PLATFORMS: ${{ github.event_name == 'pull_request' && 'amd64' || 'amd64, arm64' }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -66,6 +64,7 @@ jobs:
             podman \
             skopeo
 
+          # Rechunk requires sudo, so we need to create a dummy sudo
           echo -e "#!/bin/bash\nexec \"\$@\"" > /usr/bin/sudo
           chmod +x /usr/bin/sudo
 
@@ -80,13 +79,7 @@ jobs:
 
       - name: Check Just Syntax
         shell: bash
-        run: |
-          just check
-
-      # - name: Maximize build space
-      #   uses: ublue-os/remove-unwanted-software@517622d6452028f266b7ba4cc9a123b5f58a6b53 # v7
-      #   with:
-      #     remove-codeql: true
+        run: just check
 
       - name: Build Image
         id: build-image
@@ -106,7 +99,7 @@ jobs:
           skip_compression: true
           version: ${{ env.CENTOS_VERSION }}
 
-      - name: Load in podman
+      - name: Load Image
         id: load
         run: |
           IMAGE=$(podman pull ${{ steps.rechunk.outputs.ref }})
@@ -130,7 +123,7 @@ jobs:
           cat /run/containers/0/auth.json > ~/.docker/config.json
 
       # Push the image to GHCR (Image Registry)
-      - name: Push To GHCR
+      - name: Push to GHCR
         # if: github.event_name != 'pull_request'
         id: push
         env:
@@ -155,7 +148,7 @@ jobs:
         uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
         #if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
 
-      - name: Sign container image
+      - name: Sign Image
         #if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         run: |
           IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${IMAGE_NAME}"
@@ -165,7 +158,7 @@ jobs:
           COSIGN_EXPERIMENTAL: false
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
 
-      - name: Create job outputs
+      - name: Create Job Outputs
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           PLATFORM: ${{ matrix.platform }}
@@ -192,7 +185,7 @@ jobs:
       packages: write
       id-token: write
     steps:
-      - name: Get current date
+      - name: Get Build Date
         id: date
         run: |
           # Should generate a timestamp like what is defined on the ArtifactHub documentation
