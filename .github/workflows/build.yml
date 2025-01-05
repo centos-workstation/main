@@ -64,7 +64,7 @@ jobs:
 
       - name: Install Podman
         run: |
-          sudo dnf install -y \
+          dnf install -y \
             podman \
             skopeo
 
