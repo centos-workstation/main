@@ -12,15 +12,18 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: "rs-main-test" # the name of the image produced by this build, matches repo names
+  IMAGE_NAME: "main" # the name of the image produced by this build, matches repo names
   IMAGE_DESC: "CentOS Stream-based image for basing off of "
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   DEFAULT_TAG: "latest"
   CENTOS_VERSION: "stream10"
-  # PRs should only build for amd64 (because ARM is costly).  The rest are pushed to the registry,
-  # so we should build for all platforms
-  # PLATFORMS: ${{ github.event_name == 'pull_request' && 'amd64' || 'amd64 arm64' }}
-  PLATFORMS: "amd64 arm64"
+
+  # While we are using self-hosted runners, please only build on ARM64 when the image will be pushed
+  # to a registry.  This is because the runners are not free, and I want to protect my wallet.
+  #
+  # Thanks,
+  # Robert (p5)
+  PLATFORMS: ${{ github.event_name == 'pull_request' && 'amd64' || 'amd64 arm64' }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -92,9 +95,8 @@ jobs:
           just=$(which just)
           $just build "${IMAGE_NAME}" "${DEFAULT_TAG}"
 
-      # Reprocess raw-img using rechunker which will delete it
       - name: Run Rechunker
-        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         id: rechunk
         uses: hhd-dev/rechunk@v1.1.0
         with:
@@ -105,7 +107,7 @@ jobs:
           version: ${{ env.CENTOS_VERSION }}
 
       - name: Load Image
-        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         id: load
         run: |
           IMAGE=$(podman pull ${{ steps.rechunk.outputs.ref }})
@@ -118,7 +120,7 @@ jobs:
           echo "digest=$IMAGE_DIGEST" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
-        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         env:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -130,7 +132,7 @@ jobs:
 
       # Push the image to GHCR (Image Registry)
       - name: Push to GHCR
-        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         id: push
         env:
           IMAGE_REGISTRY: ${{ env.IMAGE_REGISTRY }}
@@ -152,10 +154,10 @@ jobs:
       # to consume. For more details, review the image signing section of the README.
       - name: Install Cosign
         uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
-        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
 
       - name: Sign Image
-        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         run: |
           IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${IMAGE_NAME}"
           cosign sign -y --key env://COSIGN_PRIVATE_KEY ${IMAGE_FULL}@${{ steps.push.outputs.remote_image_digest }}
@@ -165,7 +167,7 @@ jobs:
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
 
       - name: Create Job Outputs
-        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           PLATFORM: ${{ matrix.platform }}
@@ -175,7 +177,7 @@ jobs:
           echo "${DIGEST}" > /tmp/outputs/digests/${IMAGE_NAME}-${PLATFORM}.txt
 
       - name: Upload Output Artifacts
-        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.IMAGE_NAME }}-${{ matrix.platform }}
@@ -186,7 +188,7 @@ jobs:
 
   manifest:
     runs-on: ubuntu-latest
-    # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     needs:
       - build_push
     permissions:
