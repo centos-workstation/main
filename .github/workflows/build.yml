@@ -252,6 +252,7 @@ jobs:
           PLATFORMS=(${{ env.PLATFORMS }})
           for platform in ${PLATFORMS[@]}; do
             digest=$(echo $DIGESTS | jq -r ".$platform")
+            echo "Adding ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:$digest for $platform"
             podman manifest add $MANIFEST ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:$digest --arch $platform
           done
 
