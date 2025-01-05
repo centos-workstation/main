@@ -18,8 +18,8 @@ env:
   DEFAULT_TAG: "latest"
   CENTOS_VERSION: "stream10"
   # PRs should only build for amd64.  The rest are pushed, so we should build for all platforms
-  # PLATFORMS: ${{ github.event_name == 'pull_request' && 'amd64' || 'amd64, arm64' }}
-  PLATFORMS: "amd64, arm64"
+  # PLATFORMS: ${{ github.event_name == 'pull_request' && 'amd64' || 'amd64 arm64' }}
+  PLATFORMS: "amd64 arm64"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
