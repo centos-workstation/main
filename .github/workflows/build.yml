@@ -50,7 +50,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.generate_matrix.outputs.matrix)}}
-
     permissions:
       contents: read
       packages: write
@@ -98,9 +97,7 @@ jobs:
           podman image tag $IMAGE ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
 
           IMAGE=${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
-          podman image ls
-          skopeo inspect --raw docker://$IMAGE
-          IMAGE_DIGEST=$(skopeo inspect --raw docker://$IMAGE | jq -r '.Digest')
+          IMAGE_DIGEST=$(podman image inspect --format '{{.Digest}}' $IMAGE)
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
           echo "digest=$IMAGE_DIGEST" >> $GITHUB_OUTPUT
 
