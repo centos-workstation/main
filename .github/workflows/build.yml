@@ -59,14 +59,21 @@ jobs:
       id-token: write
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
-
-      - name: Install Podman
+      - name: Setup Container
         run: |
           dnf install -y \
+            git \
             podman \
             skopeo
+
+          echo -e "#!/bin/bash\nexec \"\$@\"" > /usr/bin/sudo
+          chmod +x /usr/bin/sudo
+
+          # Create a directory Rechunk expects
+          mkdir -p /home/runner/work/main/main
+
+      - name: Checkout
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
       - name: Setup Just
         uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6 # v2
