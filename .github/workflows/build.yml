@@ -91,14 +91,14 @@ jobs:
           skip_compression: true
           version: ${{ env.CENTOS_VERSION }}
 
-      - name: Load in podman and tag
+      - name: Load in podman
         run: |
           IMAGE=$(podman pull ${{ steps.rechunk.outputs.ref }})
-          sudo rm -rf ${{ steps.rechunk.outputs.output }}
-          podman image tag $IMAGE ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
-          skopeo inspect --raw docker://$IMAGE
-          IMAGE_DIGEST=$(skopeo inspect docker://$IMAGE | jq -r '.Digest')
-          echo "image=$IMAGE" >> $GITHUB_OUTPUT
+          sudo rm -rf ${{ steps.rechunk.outputs.location }}
+          podman image tag ${{ env.IMAGE_NAME }} ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
+          skopeo inspect --raw docker://${{ env.IMAGE_NAME }}
+          IMAGE_DIGEST=$(skopeo inspect docker://${{ env.IMAGE_NAME }} | jq -r '.Digest')
+          echo "image=${{ env.IMAGE_NAME }}" >> $GITHUB_OUTPUT
           echo "digest=$IMAGE_DIGEST" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
