@@ -20,7 +20,7 @@ env:
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   DEFAULT_TAG: "latest"
   CENTOS_VERSION: "stream10"
-  PLATFORMS: "amd64"
+  PLATFORMS: "amd64 arm64"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -247,6 +247,7 @@ jobs:
         env:
           MANIFEST: ${{ steps.create-manifest.outputs.MANIFEST }}
           DIGESTS_JSON: ${{ steps.load-outputs.outputs.DIGESTS_JSON }}
+          LABELS: ${{ steps.metadata.outputs.labels }}
         run: |
           DIGESTS=$(echo "$DIGESTS_JSON" | jq -c '.')
           PLATFORMS=(${{ env.PLATFORMS }})
@@ -254,6 +255,11 @@ jobs:
             digest=$(echo $DIGESTS | jq -r ".$platform")
             echo "Adding ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}@$digest for $platform"
             podman manifest add $MANIFEST ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}@$digest --arch $platform
+          done
+
+          # Apply labels to the manifest
+          for label in $(echo $LABELS | tr ' ' '\n'); do
+            podman manifest annotate $MANIFEST --annotation $label
           done
 
       - name: Login to GHCR
