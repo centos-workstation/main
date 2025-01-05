@@ -47,9 +47,9 @@ jobs:
     name: Build and push image
     runs-on: ubuntu-24.04
     needs: generate_matrix
-    # container:
-    #   image: registry.redhat.io/ubi9/ubi:latest
-    #   options: --privileged
+    container:
+      image: redhat/ubi9:latest
+      options: --privileged
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.generate_matrix.outputs.matrix)}}
@@ -61,6 +61,12 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
+
+      - name: Install Podman
+        run: |
+          sudo dnf install -y \
+            podman \
+            skopeo
 
       - name: Setup Just
         uses: extractions/setup-just@dd310ad5a97d8e7b41793f8ef055398d51ad4de6 # v2
@@ -80,7 +86,7 @@ jobs:
         shell: bash
         run: |
           just=$(which just)
-          sudo $just build "${IMAGE_NAME}" "${DEFAULT_TAG}"
+          $just build "${IMAGE_NAME}" "${DEFAULT_TAG}"
 
       # Reprocess raw-img using rechunker which will delete it
       - name: Run Rechunker
@@ -97,7 +103,7 @@ jobs:
         id: load
         run: |
           IMAGE=$(podman pull ${{ steps.rechunk.outputs.ref }})
-          sudo rm -rf ${{ steps.rechunk.outputs.location }}
+          rm -rf ${{ steps.rechunk.outputs.location }}
           podman image tag $IMAGE ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
 
           IMAGE=${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
