@@ -12,7 +12,7 @@ on:
   workflow_dispatch:
 
 env:
-  IMAGE_NAME: "main" # the name of the image produced by this build, matches repo names
+  IMAGE_NAME: "rs-main-test" # the name of the image produced by this build, matches repo names
   IMAGE_DESC: "CentOS Stream-based image for basing off of "
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   DEFAULT_TAG: "latest"
@@ -52,7 +52,7 @@ jobs:
     needs: generate_matrix
     timeout-minutes: 30
     container:
-      image: redhat/ubi9:latest
+      image: quay.io/centos/centos:stream10
       options: --privileged
     strategy:
       fail-fast: false
@@ -275,6 +275,11 @@ jobs:
             digest=$(echo $DIGESTS | jq -r ".$platform")
             echo "Adding ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}@$digest for $platform"
             podman manifest add $MANIFEST ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}@$digest --arch $platform
+          done
+
+          # Apply the labels to the manifest
+          for label in $(echo $LABELS | tr ' ' '\n'); do
+            podman manifest annotate --index --annotation=$label $MANIFEST
           done
 
       - name: Login to GHCR
