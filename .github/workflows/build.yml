@@ -96,6 +96,8 @@ jobs:
           IMAGE=$(podman pull ${{ steps.rechunk.outputs.ref }})
           sudo rm -rf ${{ steps.rechunk.outputs.location }}
           podman image tag $IMAGE ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
+
+          IMAGE=${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
           skopeo inspect --raw docker://$IMAGE
           IMAGE_DIGEST=$(skopeo inspect docker://$IMAGE | jq -r '.Digest')
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
