@@ -46,6 +46,7 @@ jobs:
     name: Build and push image
     runs-on: ${{ matrix.platform == 'amd64' && 'ubuntu-24.04' || format('runs-on,runner=1cpu-linux-{0},run-id={1}', matrix.platform, github.run_id) }}
     needs: generate_matrix
+    timeout-minutes: 30
     container:
       image: redhat/ubi9:latest
       options: --privileged
@@ -92,9 +93,9 @@ jobs:
       # Reprocess raw-img using rechunker which will delete it
       - name: Run Rechunker
         id: rechunk
-        uses: hhd-dev/rechunk@602e6d62558ab23e15e8764ce06e26c0f328da71 # v1.0.1
+        uses: hhd-dev/rechunk@v1.1.0
         with:
-          rechunk: "ghcr.io/hhd-dev/rechunk:v1.0.1"
+          rechunk: "ghcr.io/hhd-dev/rechunk:v1.1.0"
           ref: "localhost/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
           prev-ref: "${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}"
           skip_compression: true
