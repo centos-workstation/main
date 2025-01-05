@@ -121,6 +121,7 @@ jobs:
           IMAGE_REGISTRY: ${{ env.IMAGE_REGISTRY }}
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           IMAGE_DIGEST: ${{ steps.load.outputs.digest }}
+          PLATFORM: ${{ matrix.platform }}
         run: |
           podman tag ${{ env.IMAGE_REGISTRY }}/${IMAGE_NAME}:${DEFAULT_TAG} $IMAGE_REGISTRY/$IMAGE_NAME:$DEFAULT_TAG-$PLATFORM
           for i in {1..3}; do
