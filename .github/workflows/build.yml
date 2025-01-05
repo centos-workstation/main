@@ -228,7 +228,7 @@ jobs:
         id: load-outputs
         run: |
           DIGESTS_JSON=$(jq -n '{}')
-          for file in /tmp/artifacts/*.txt; do
+          for digest_file in /tmp/artifacts/*.txt; do
             # Extract the platform from the file name
             PLATFORM=$(basename $digest_file | rev | cut -d'-' -f1 | rev | cut -d'.' -f1)
             DIGEST=$(cat $digest_file)
