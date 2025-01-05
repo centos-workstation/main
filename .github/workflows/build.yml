@@ -44,7 +44,7 @@ jobs:
 
   build_push:
     name: Build and push image
-    runs-on: ${{ matrix.platform == 'amd64' && 'ubuntu-24.04' || format('runs-on,runner=1cpu-linux-{0},run-id={1}', matrix.arch, github.run_id) }}
+    runs-on: ${{ matrix.platform == 'amd64' && 'ubuntu-24.04' || format('runs-on,runner=1cpu-linux-{0},run-id={1}', matrix.platform, github.run_id) }}
     needs: generate_matrix
     container:
       image: redhat/ubi9:latest
