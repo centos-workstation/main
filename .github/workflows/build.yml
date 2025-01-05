@@ -267,7 +267,9 @@ jobs:
         env:
           MANIFEST: ${{ steps.create-manifest.outputs.MANIFEST }}
           TAGS: ${{ steps.metadata.outputs.tags }}
+          IMAGE_REGISTRY: ${{ env.IMAGE_REGISTRY }}
+          IMAGE_NAME: ${{ env.IMAGE_NAME }}
         run: |
           for tag in $(echo $TAGS | tr ' ' '\n'); do
-            podman manifest push --all=false $MANIFEST $tag
+            podman manifest push --all=false $MANIFEST $IMAGE_REGISTRY/$IMAGE_NAME:$tag
           done
