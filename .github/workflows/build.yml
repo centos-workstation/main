@@ -98,8 +98,8 @@ jobs:
           podman image tag $IMAGE ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
 
           IMAGE=${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:${{ env.DEFAULT_TAG }}
-          skopeo inspect --raw docker://$IMAGE
-          IMAGE_DIGEST=$(skopeo inspect docker://$IMAGE | jq -r '.Digest')
+          skopeo inspect --raw containers-storage:$IMAGE
+          IMAGE_DIGEST=$(skopeo inspect --raw containers-storage:$IMAGE | jq -r '.Digest')
           echo "image=$IMAGE" >> $GITHUB_OUTPUT
           echo "digest=$IMAGE_DIGEST" >> $GITHUB_OUTPUT
 
