@@ -263,24 +263,11 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Tag Manifest
-        id: tag-manifest
-        env:
-          TAGS: ${{ steps.metadata.outputs.tags }}
-        run: |
-          MANIFEST_TAGS=()
-          for tag in $(echo $TAGS | tr ' ' '\n'); do
-            podman manifest tag ${{ steps.create-manifest.outputs.MANIFEST }} ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:$tag
-            MANIFEST_TAGS+=(${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}:$tag)
-          done
-          MANIFEST_TAGS_JSON=$(printf '%s\n' "${MANIFEST_TAGS[@]}" | jq -R . | jq -cs .)
-          echo "MANIFEST_TAGS_JSON=${MANIFEST_TAGS_JSON}" >> $GITHUB_OUTPUT
-
       - name: Push Manifest
         env:
           MANIFEST: ${{ steps.create-manifest.outputs.MANIFEST }}
-          MANIFEST_TAGS_JSON: ${{ steps.tag-manifest.outputs.MANIFEST_TAGS_JSON }}
+          TAGS: ${{ steps.metadata.outputs.tags }}
         run: |
-          for tag in $(echo $MANIFEST_TAGS_JSON | jq -r '.[]'); do
+          for tag in $(echo $TAGS | tr ' ' '\n'); do
             podman manifest push --all=false $MANIFEST $tag
           done
