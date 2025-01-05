@@ -45,7 +45,7 @@ jobs:
 
   build_push:
     name: Build and push image
-    runs-on: ubuntu-24.04
+    runs-on: ${{ matrix.platform == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04' }}
     needs: generate_matrix
     container:
       image: redhat/ubi9:latest
@@ -271,11 +271,6 @@ jobs:
             digest=$(echo $DIGESTS | jq -r ".$platform")
             echo "Adding ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}@$digest for $platform"
             podman manifest add $MANIFEST ${{ env.IMAGE_REGISTRY }}/${{ env.IMAGE_NAME }}@$digest --arch $platform
-          done
-
-          # Apply labels to the manifest
-          for label in $(echo $LABELS | tr ' ' '\n'); do
-            podman manifest annotate $MANIFEST --annotation $label
           done
 
       - name: Login to GHCR
