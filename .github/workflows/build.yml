@@ -52,7 +52,7 @@ jobs:
     needs: generate_matrix
     timeout-minutes: 30
     container:
-      image: quay.io/centos/centos:stream10
+      image: redhat/ubi9:latest
       options: --privileged
     strategy:
       fail-fast: false
@@ -68,8 +68,7 @@ jobs:
           dnf install -y \
             git \
             podman \
-            skopeo \
-            which
+            skopeo
 
           # Rechunk requires sudo, so we need to create a dummy sudo
           echo -e "#!/bin/bash\nexec \"\$@\"" > /usr/bin/sudo
@@ -97,7 +96,7 @@ jobs:
           $just build "${IMAGE_NAME}" "${DEFAULT_TAG}"
 
       - name: Run Rechunker
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         id: rechunk
         uses: hhd-dev/rechunk@v1.1.0
         with:
@@ -108,7 +107,7 @@ jobs:
           version: ${{ env.CENTOS_VERSION }}
 
       - name: Load Image
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         id: load
         run: |
           IMAGE=$(podman pull ${{ steps.rechunk.outputs.ref }})
@@ -121,7 +120,7 @@ jobs:
           echo "digest=$IMAGE_DIGEST" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         env:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -133,7 +132,7 @@ jobs:
 
       # Push the image to GHCR (Image Registry)
       - name: Push to GHCR
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         id: push
         env:
           IMAGE_REGISTRY: ${{ env.IMAGE_REGISTRY }}
@@ -155,10 +154,10 @@ jobs:
       # to consume. For more details, review the image signing section of the README.
       - name: Install Cosign
         uses: sigstore/cosign-installer@dc72c7d5c4d10cd6bcb8cf6e3fd625a9e5e537da # v3.7.0
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
 
       - name: Sign Image
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         run: |
           IMAGE_FULL="${{ env.IMAGE_REGISTRY }}/${IMAGE_NAME}"
           cosign sign -y --key env://COSIGN_PRIVATE_KEY ${IMAGE_FULL}@${{ steps.push.outputs.remote_image_digest }}
@@ -168,7 +167,7 @@ jobs:
           COSIGN_PRIVATE_KEY: ${{ secrets.SIGNING_SECRET }}
 
       - name: Create Job Outputs
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
           PLATFORM: ${{ matrix.platform }}
@@ -178,7 +177,7 @@ jobs:
           echo "${DIGEST}" > /tmp/outputs/digests/${IMAGE_NAME}-${PLATFORM}.txt
 
       - name: Upload Output Artifacts
-        if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+        # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.IMAGE_NAME }}-${{ matrix.platform }}
@@ -189,7 +188,7 @@ jobs:
 
   manifest:
     runs-on: ubuntu-latest
-    if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
+    # if: github.event_name != 'pull_request' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
     needs:
       - build_push
     permissions:
