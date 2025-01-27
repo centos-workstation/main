@@ -117,7 +117,7 @@ jobs:
         run: |
           echo ${{ secrets.GITHUB_TOKEN }} | sudo podman login -u ${{ github.actor }} --password-stdin $registry
           mkdir -p ~/.docker
-          cat /run/containers/0/auth.json > ~/.docker/config.json
+          sudo cat /run/containers/0/auth.json > ~/.docker/config.json
 
       # Push the image to GHCR (Image Registry)
       - name: Push to GHCR
