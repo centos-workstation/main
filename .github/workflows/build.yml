@@ -17,13 +17,7 @@ env:
   IMAGE_REGISTRY: "ghcr.io/${{ github.repository_owner }}"
   DEFAULT_TAG: "latest"
   CENTOS_VERSION: "stream10"
-
-  # While we are using self-hosted runners, please only build on ARM64 when the image will be pushed
-  # to a registry.  This is because the runners are not free, and I want to protect my wallet.
-  #
-  # Thanks,
-  # Robert (p5)
-  PLATFORMS: ${{ github.event_name == 'pull_request' && 'amd64' || 'amd64 arm64' }}
+  PLATFORMS: 'amd64 arm64'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref || github.run_id }}
@@ -48,12 +42,9 @@ jobs:
 
   build_push:
     name: Build and push image
-    runs-on: ${{ matrix.platform == 'amd64' && 'ubuntu-24.04' || format('runs-on,runner=1cpu-linux-{0},run-id={1}', matrix.platform, github.run_id) }}
+    runs-on: ${{ matrix.platform == 'amd64' && 'ubuntu-24.04' || 'ubuntu-24.04-arm' }}
     needs: generate_matrix
     timeout-minutes: 30
-    container:
-      image: redhat/ubi9:latest
-      options: --privileged
     strategy:
       fail-fast: false
       matrix: ${{fromJson(needs.generate_matrix.outputs.matrix)}}
@@ -63,21 +54,6 @@ jobs:
       id-token: write
 
     steps:
-      - name: Setup Container
-        run: |
-          dnf install -y \
-            git \
-            podman \
-            skopeo
-
-          # Rechunk requires sudo, so we need to create a dummy sudo
-          echo -e "#!/bin/bash\nexec \"\$@\"" > /usr/bin/sudo
-          chmod +x /usr/bin/sudo
-
-          # Create a directory Rechunk expects
-          mkdir -p /home/runner/work/main/main
-          mkdir -p /home/runner/_work/main/main
-
       - name: Checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4
 
