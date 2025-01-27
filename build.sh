@@ -85,3 +85,6 @@ systemctl enable fwupd.service
 # The compose repos we used during the build are point in time repos that are
 # not updated, so we don't want to leave them enabled.
 dnf config-manager --set-disabled baseos-compose,appstream-compose
+
+# enable systemd-resolved for proper name resolution
+systemctl enable systemd-resolved.service
