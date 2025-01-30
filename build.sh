@@ -56,12 +56,15 @@ dnf -y install \
    "gnome-bluetooth" \
    "gnome-color-manager" \
    "gnome-control-center" \
+   "gnome-disk-utility" \
    "gnome-initial-setup" \
    "gnome-remote-desktop" \
    "gnome-session-wayland-session" \
    "gnome-settings-daemon" \
    "gnome-shell" \
    "gnome-software" \
+   "gnome-system-monitor" \
+   "gnome-tweaks" \
    "gnome-user-docs" \
    "gvfs-fuse" \
    "gvfs-goa" \
