@@ -77,6 +77,20 @@ dnf -y install \
    "xdg-user-dirs-gtk" \
    "yelp-tools"
 
+# Some RPMs to match uBlue Silverblue Main.
+dnf -y install \
+   "distrobox" \
+   "google-noto-sans-balinese-fonts" \
+   "google-noto-sans-cjk-fonts" \
+   "google-noto-sans-javanese-fonts" \
+   "google-noto-sans-sundanese-fonts" \
+   "ffmpeg-free" \
+   "fuse" \
+   "htop" \
+   "openssl" \
+   "nvtop" \
+   "vim"
+
 # This adds "[systemd] Failed Units: *" to the bashrc startup
 dnf -y remove console-login-helper-messages
 
