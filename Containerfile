@@ -9,7 +9,5 @@ COPY build.sh /tmp/build.sh
 RUN --mount=type=bind,from=config,src=/rpms,dst=/tmp/rpms chmod +x /tmp/build.sh && \
     /tmp/build.sh && \
     dnf clean all && \
-    ostree container commit
-
-# Just gotta get this green!
-RUN bootc container lint
+    ostree container commit && \
+    bootc container lint
