@@ -7,7 +7,7 @@ CentOS Stream-based image with @Workstation preinstalled. How this is expected t
 
 ```Dockerfile
 FROM ghcr.io/centos-workstation/main:latest # (or whatever tag you want)
-RUN dnf -y install htop fastfetch
+RUN dnf -y install fastfetch
 
 $your_hopes_and_dreams_go_here.
 
