@@ -97,6 +97,10 @@ dnf -y install \
 # This adds "[systemd] Failed Units: *" to the bashrc startup
 dnf -y remove console-login-helper-messages
 
+# Add Flathub
+mkdir -p /etc/flatpak/remotes.d
+curl -o /etc/flatpak/remotes.d/flathub.flatpakrepo https://dl.flathub.org/repo/flathub.flatpakrepo
+
 systemctl enable gdm.service
 systemctl enable fwupd.service
 
