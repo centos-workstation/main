@@ -54,6 +54,7 @@ dnf -y install \
    "centos-backgrounds" \
    "gdm" \
    "gnome-bluetooth" \
+   "gnome-calculator" \
    "gnome-color-manager" \
    "gnome-control-center" \
    "gnome-disk-utility" \
@@ -64,6 +65,7 @@ dnf -y install \
    "gnome-shell" \
    "gnome-software" \
    "gnome-system-monitor" \
+   "gnome-text-editor" \
    "gnome-tweaks" \
    "gnome-user-docs" \
    "gvfs-fuse" \
@@ -72,6 +74,7 @@ dnf -y install \
    "gvfs-mtp" \
    "gvfs-smb" \
    "libsane-hpaio" \
+   "loupe" \
    "nautilus" \
    "orca" \
    "ptyxis" \
