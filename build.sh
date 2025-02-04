@@ -94,6 +94,10 @@ dnf -y install \
    "nvtop" \
    "vim"
 
+# Web browser
+dnf -y install \
+    "firefox"
+
 # This adds "[systemd] Failed Units: *" to the bashrc startup
 dnf -y remove console-login-helper-messages
 
